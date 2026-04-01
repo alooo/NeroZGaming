@@ -1,65 +1,30 @@
---// NeroZ UI FIXED (WORKING)
+--// Simple Rainbow Stats (giống ảnh)
 
-local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
+local Stats = game:GetService("Stats")
 
--- GUI SAFE
-local parent = game:FindFirstChild("CoreGui") or Players.LocalPlayer:WaitForChild("PlayerGui")
+-- GUI
+local gui = Instance.new("ScreenGui", game.CoreGui)
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "NeroZ_Fixed"
-gui.Parent = parent
+local label = Instance.new("TextLabel", gui)
+label.Position = UDim2.new(0, 10, 0, 10)
+label.Size = UDim2.new(0, 180, 0, 90)
+label.BackgroundTransparency = 1
+label.TextXAlignment = Enum.TextXAlignment.Left
+label.TextYAlignment = Enum.TextYAlignment.Top
+label.Font = Enum.Font.Code
+label.TextSize = 14
 
-local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 260, 0, 140)
-main.Position = UDim2.new(0, 60, 0, 60)
-main.BackgroundColor3 = Color3.fromRGB(40,40,40)
-main.BackgroundTransparency = 0.2
-main.Active = true
-main.Draggable = true
-
-Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
-
--- TITLE
-local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1,0,0,30)
-title.BackgroundTransparency = 1
-title.Text = "NeroZ FIXED UI"
-title.Font = Enum.Font.GothamBold
-title.TextSize = 15
-title.TextStrokeTransparency = 0.5
-
--- TEXT
-local statsText = Instance.new("TextLabel", main)
-statsText.Position = UDim2.new(0,5,0,30)
-statsText.Size = UDim2.new(1,-10,1,-35)
-statsText.BackgroundTransparency = 1
-statsText.Font = Enum.Font.Code
-statsText.TextSize = 14
-statsText.TextXAlignment = Enum.TextXAlignment.Left
-statsText.TextYAlignment = Enum.TextYAlignment.Top
-statsText.TextStrokeTransparency = 0.5
-
--- 🌈 GRADIENT
-local gradient = Instance.new("UIGradient", statsText)
-gradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,0)),
-	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0,255,255)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(255,0,255))
-}
-
-local gradient2 = gradient:Clone()
-gradient2.Parent = title
-
+-- 🌈 Rainbow
+local hue = 0
 RunService.RenderStepped:Connect(function()
-	local t = tick()
-	gradient.Offset = Vector2.new(math.sin(t),0)
-	gradient2.Offset = Vector2.new(math.sin(t),0)
+	hue += 0.01
+	if hue > 1 then hue = 0 end
+	label.TextColor3 = Color3.fromHSV(hue,1,1)
 end)
 
--- FPS (ổn định hơn)
+-- FPS
 local fps = 60
 task.spawn(function()
 	while true do
@@ -70,7 +35,7 @@ task.spawn(function()
 	end
 end)
 
--- UPDATE SAFE
+-- UPDATE
 task.spawn(function()
 	while true do
 		task.wait(1)
@@ -78,39 +43,15 @@ task.spawn(function()
 		local players = #Players:GetPlayers()
 		local time = math.floor(workspace.DistributedGameTime)
 
-		-- Ping fallback (không lỗi)
 		local ping = "N/A"
 		pcall(function()
-			ping = tostring(math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())).." ms"
+			ping = tostring(math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())).." ms"
 		end)
 
-		statsText.Text =
+		label.Text =
 			"FPS: "..fps..
-			"\nPing: "..ping..
 			"\nPlayers: "..players..
-			"\nTime: "..time..
-			"\nCPU: "..math.random(30,90).."%"..
-			"\nGPU: "..math.random(30,90).."%"
-	end
-end)
-
--- MINIMIZE
-local minimize = Instance.new("TextButton", main)
-minimize.Size = UDim2.new(0,25,0,25)
-minimize.Position = UDim2.new(1,-30,0,2)
-minimize.Text = "-"
-minimize.BackgroundColor3 = Color3.fromRGB(60,60,60)
-minimize.TextColor3 = Color3.new(1,1,1)
-
-local minimized = false
-minimize.MouseButton1Click:Connect(function()
-	minimized = not minimized
-	
-	if minimized then
-		main.Size = UDim2.new(0, 200, 0, 30)
-		statsText.Visible = false
-	else
-		main.Size = UDim2.new(0, 260, 0, 140)
-		statsText.Visible = true
+			"\nPing: "..ping..
+			"\nTime: "..time
 	end
 end)
