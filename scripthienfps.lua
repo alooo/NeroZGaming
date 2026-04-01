@@ -1,62 +1,35 @@
---// NeroZ UI PRO MAX (VISIBLE FIX)
+--// NeroZ UI FIXED (WORKING)
 
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local Stats = game:GetService("Stats")
 local Players = game:GetService("Players")
 
--- GUI
-local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "NeroZ_ClearUI"
+-- GUI SAFE
+local parent = game:FindFirstChild("CoreGui") or Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "NeroZ_Fixed"
+gui.Parent = parent
 
 local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0, 260, 0, 140)
 main.Position = UDim2.new(0, 60, 0, 60)
-
--- ⭐ NỀN FIX (dễ nhìn)
-main.BackgroundColor3 = Color3.fromRGB(35,35,35)
-main.BackgroundTransparency = 0.25
+main.BackgroundColor3 = Color3.fromRGB(40,40,40)
+main.BackgroundTransparency = 0.2
 main.Active = true
+main.Draggable = true
 
 Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
-
--- viền sáng nhẹ
-local stroke = Instance.new("UIStroke", main)
-stroke.Thickness = 1.5
-stroke.Color = Color3.fromRGB(180,180,180)
 
 -- TITLE
 local title = Instance.new("TextLabel", main)
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "NeroZ PRO MAX"
+title.Text = "NeroZ FIXED UI"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 15
-
--- ⭐ VIỀN CHỮ (dễ nhìn)
 title.TextStrokeTransparency = 0.5
-title.TextStrokeColor3 = Color3.fromRGB(0,0,0)
-
--- 🌈 GRADIENT TITLE
-local gradientTitle = Instance.new("UIGradient", title)
-gradientTitle.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,0)),
-	ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255,127,0)),
-	ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255,255,0)),
-	ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0,255,0)),
-	ColorSequenceKeypoint.new(0.8, Color3.fromRGB(0,0,255)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(139,0,255))
-}
-
--- MINIMIZE
-local minimize = Instance.new("TextButton", main)
-minimize.Size = UDim2.new(0,25,0,25)
-minimize.Position = UDim2.new(1,-30,0,2)
-minimize.Text = "-"
-minimize.BackgroundColor3 = Color3.fromRGB(60,60,60)
-minimize.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", minimize)
 
 -- TEXT
 local statsText = Instance.new("TextLabel", main)
@@ -67,72 +40,49 @@ statsText.Font = Enum.Font.Code
 statsText.TextSize = 14
 statsText.TextXAlignment = Enum.TextXAlignment.Left
 statsText.TextYAlignment = Enum.TextYAlignment.Top
-
--- ⭐ VIỀN CHỮ
 statsText.TextStrokeTransparency = 0.5
-statsText.TextStrokeColor3 = Color3.fromRGB(0,0,0)
 
--- 🌈 GRADIENT TEXT
+-- 🌈 GRADIENT
 local gradient = Instance.new("UIGradient", statsText)
-gradient.Color = gradientTitle.Color
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,0)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0,255,255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255,0,255))
+}
 
--- DRAG SMOOTH
-local dragging = false
-local dragStart, startPos
+local gradient2 = gradient:Clone()
+gradient2.Parent = title
 
-main.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = main.Position
-	end
-end)
-
-main.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = false
-	end
-end)
-
-UIS.InputChanged:Connect(function(input)
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		local delta = input.Position - dragStart
-		
-		TweenService:Create(main, TweenInfo.new(0.08), {
-			Position = UDim2.new(
-				startPos.X.Scale,
-				startPos.X.Offset + delta.X,
-				startPos.Y.Scale,
-				startPos.Y.Offset + delta.Y
-			)
-		}):Play()
-	end
-end)
-
--- 🌈 ANIMATE GRADIENT
 RunService.RenderStepped:Connect(function()
 	local t = tick()
-	gradient.Offset = Vector2.new(math.sin(t), 0)
-	gradientTitle.Offset = Vector2.new(math.sin(t), 0)
+	gradient.Offset = Vector2.new(math.sin(t),0)
+	gradient2.Offset = Vector2.new(math.sin(t),0)
 end)
 
--- FPS
-local fps = 0
-local last = tick()
-
-RunService.RenderStepped:Connect(function()
-	fps = math.floor(1 / (tick() - last))
-	last = tick()
+-- FPS (ổn định hơn)
+local fps = 60
+task.spawn(function()
+	while true do
+		local t1 = tick()
+		RunService.RenderStepped:Wait()
+		local t2 = tick()
+		fps = math.floor(1/(t2-t1))
+	end
 end)
 
--- UPDATE
+-- UPDATE SAFE
 task.spawn(function()
 	while true do
 		task.wait(1)
 
-		local ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
 		local players = #Players:GetPlayers()
 		local time = math.floor(workspace.DistributedGameTime)
+
+		-- Ping fallback (không lỗi)
+		local ping = "N/A"
+		pcall(function()
+			ping = tostring(math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())).." ms"
+		end)
 
 		statsText.Text =
 			"FPS: "..fps..
@@ -144,24 +94,23 @@ task.spawn(function()
 	end
 end)
 
--- MINIMIZE ANIMATION
-local minimized = false
+-- MINIMIZE
+local minimize = Instance.new("TextButton", main)
+minimize.Size = UDim2.new(0,25,0,25)
+minimize.Position = UDim2.new(1,-30,0,2)
+minimize.Text = "-"
+minimize.BackgroundColor3 = Color3.fromRGB(60,60,60)
+minimize.TextColor3 = Color3.new(1,1,1)
 
+local minimized = false
 minimize.MouseButton1Click:Connect(function()
 	minimized = not minimized
 	
 	if minimized then
-		TweenService:Create(main, TweenInfo.new(0.25), {
-			Size = UDim2.new(0, 200, 0, 30)
-		}):Play()
-		
+		main.Size = UDim2.new(0, 200, 0, 30)
 		statsText.Visible = false
 	else
-		TweenService:Create(main, TweenInfo.new(0.25), {
-			Size = UDim2.new(0, 260, 0, 140)
-		}):Play()
-		
-		task.wait(0.1)
+		main.Size = UDim2.new(0, 260, 0, 140)
 		statsText.Visible = true
 	end
 end)
